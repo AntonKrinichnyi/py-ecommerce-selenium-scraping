@@ -82,7 +82,7 @@ def get_price_by_hdd(element: WebElement,
                      driver: WebElement) -> dict[str, float]:
     hdd_price = {}
 
-    buttons = element.find_element(By.TAG_NAME, "button")
+    buttons = element.find_elements(By.TAG_NAME, "button")
 
     for button in buttons:
         if not button.get_property("disabled"):
@@ -138,7 +138,7 @@ def parse_product(product: Tag, driver: WebElement) -> Product:
         description=product.select_one(".description").text,
         price=float(product.select_one(".price").text.replace("$", "")),
         rating=len(product.select(".ws-icon-star")),
-        num_of_reviews=product.select_one(".reviews").text.split()[0],
+        num_of_reviews=int(product.select_one(".reviews").text.split()[0]),
         additional_info=get_product_additional_info(driver, product)
     )
 
@@ -165,15 +165,16 @@ def parse_page(page_url: str, name_process: str) -> list[Product]:
 
 def save_in_csv(file_name: str, objects: list[Product]) -> None:
     with open(file_name, "w", encoding="UTF-8", newline="") as f:
-        field_names = [field.name for field in fields(objects[0])]
+        if objects:
+            field_names = [field.name for field in fields(objects[0])]
 
-        writer = csv.writer(f)
-        writer.writerow(field_names)
+            writer = csv.writer(f)
+            writer.writerow(field_names)
 
-        for obj in objects:
-            row = [getattr(obj, field) for field in field_names]
-            row[-1] = json.dumps(row[-1])
-            writer.writerow(row)
+            for obj in objects:
+                row = [getattr(obj, field) for field in field_names]
+                row[-1] = json.dumps(row[-1])
+                writer.writerow(row)
 
 
 def get_all_products() -> None:
